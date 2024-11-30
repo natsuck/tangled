@@ -207,15 +207,24 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
     }
   }, [elapsedTime, audioRef, onClose])
 
-  // Add this function to create a lantern with random position and velocity
-  const createLantern = (id: number): Lantern => ({
-    id,
-    x: Math.random() * (window.innerWidth - 50), // Account for lantern width
-    y: Math.random() * (window.innerHeight - 50), // Account for lantern height
-    velocityX: (Math.random() - 0.5) * 0.5, // Random velocity between -0.25 and 0.25
-    velocityY: (Math.random() - 0.5) * 0.5,
-    delay: Math.random() * 2
-  });
+  // Update the createLantern function to handle viewport sizes better
+  const createLantern = (id: number): Lantern => {
+    // Get current viewport dimensions
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0;
+    
+    // Add padding to keep lanterns away from edges
+    const padding = 60;
+    
+    return {
+      id,
+      x: padding + Math.random() * (viewportWidth - padding * 2),
+      y: padding + Math.random() * (viewportHeight - padding * 2),
+      velocityX: (Math.random() - 0.5) * 0.3, // Reduced velocity
+      velocityY: (Math.random() - 0.5) * 0.3, // Reduced velocity
+      delay: Math.random() * 2
+    };
+  };
 
   // Add this effect to handle lantern spawning
   useEffect(() => {
@@ -226,9 +235,26 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
     }
   }, [elapsedTime, showLanterns]);
 
-  // Add this effect to handle lantern movement
+  // Update the lantern movement effect
   useEffect(() => {
     if (!showLanterns) return;
+
+    // Handle viewport resize
+    const handleResize = () => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const padding = 60;
+
+      setLanterns(prevLanterns => 
+        prevLanterns.map(lantern => ({
+          ...lantern,
+          x: Math.min(Math.max(lantern.x, padding), viewportWidth - padding),
+          y: Math.min(Math.max(lantern.y, padding), viewportHeight - padding),
+        }))
+      );
+    };
+
+    window.addEventListener('resize', handleResize);
 
     const animationFrame = requestAnimationFrame(function animate() {
       setLanterns(prevLanterns => 
@@ -240,12 +266,18 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
           let newVelocityY = lantern.velocityY;
           /* eslint-enable prefer-const */
 
-          // Bounce off edges
-          if (newX <= 0 || newX >= window.innerWidth - 50) {
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          const padding = 60;
+
+          // Bounce off edges with padding
+          if (newX <= padding || newX >= viewportWidth - padding) {
             newVelocityX = -newVelocityX;
+            newX = newX <= padding ? padding : viewportWidth - padding;
           }
-          if (newY <= 0 || newY >= window.innerHeight - 50) {
+          if (newY <= padding || newY >= viewportHeight - padding) {
             newVelocityY = -newVelocityY;
+            newY = newY <= padding ? padding : viewportHeight - padding;
           }
 
           return {
@@ -261,7 +293,10 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
       requestAnimationFrame(animate);
     });
 
-    return () => cancelAnimationFrame(animationFrame);
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      window.removeEventListener('resize', handleResize);
+    };
   }, [showLanterns]);
 
   return (
@@ -437,10 +472,11 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                 {lanterns.map((lantern) => (
                   <motion.div
                     key={lantern.id}
-                    className="absolute"
+                    className="absolute transform-gpu" // Add transform-gpu for better performance
                     style={{ 
                       left: lantern.x,
                       top: lantern.y,
+                      willChange: 'transform', // Optimize for animations
                     }}
                     initial="initial"
                     animate="animate"
@@ -449,7 +485,7 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                       delay: lantern.delay,
                     }}
                   >
-                    <div className="relative">
+                    <div className="relative w-6 h-8 sm:w-8 sm:h-10"> {/* Smaller size on mobile */}
                       {/* Outer pulsing glow */}
                       <motion.div
                         className="absolute -inset-4 bg-yellow-300/20 rounded-full blur-xl"
