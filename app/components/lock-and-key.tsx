@@ -59,7 +59,7 @@ export default function LockAndKey() {
         
         // Set volume
         unlockAudioRef.current.volume = 0.5
-        bgMusicRef.current.volume = 0.3
+        bgMusicRef.current.volume = 0.5
 
         setAudioInitialized(true)
       }
