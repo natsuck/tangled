@@ -23,6 +23,7 @@ export default function LockAndKey() {
   const unlockAudioRef = useRef<HTMLAudioElement | null>(null)
   const bgMusicRef = useRef<HTMLAudioElement | null>(null)
   const [audioInitialized, setAudioInitialized] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
 
   // Set initial key position
   React.useEffect(() => {
@@ -191,20 +192,27 @@ export default function LockAndKey() {
             }}
           >
             <div className="text-white/90 text-2xl md:text-3xl font-medium mb-4">
-              Tap to Begin
+              Tap the Key to Begin
             </div>
             <div className="text-white/50 text-sm md:text-base max-w-md mx-auto">
-              This experience includes audio. Tap anywhere to enable sound and start.
+              Tap the key first to enable audio, then drag it to the lock.
             </div>
+            
+            {/* Interactive Key in initial screen */}
             <motion.div
-              animate={{ y: [0, 8, 0] }}
+              className="mt-8 cursor-pointer"
+              animate={{ 
+                rotate: [0, 10, 0],
+                y: [0, -8, 0]
+              }}
               transition={{
-                duration: 1.5,
+                duration: 2,
                 repeat: Infinity,
                 repeatType: "reverse"
               }}
+              onClick={() => setHasInteracted(true)}
             >
-              <div className="text-pink-500/70 text-4xl">↓</div>
+              <Key className="w-16 h-16 text-pink-500/70" />
             </motion.div>
           </motion.div>
         </motion.div>
@@ -251,6 +259,8 @@ export default function LockAndKey() {
                 x: keyX,
                 y: keyY,
               }}
+              onDragStart={() => setIsDragging(true)}
+              onDragEnd={() => setIsDragging(false)}
               className="absolute cursor-grab active:cursor-grabbing"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
