@@ -125,6 +125,19 @@ const driftingLanternAnimation = {
   }
 };
 
+// Add this new animation for the pulsing glow
+const pulsingGlowAnimation = {
+  animate: {
+    scale: [1, 1.2, 1],
+    opacity: [0.3, 0.7, 0.3],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut"
+    }
+  }
+};
+
 export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
   const [currentLyricIndex, setCurrentLyricIndex] = useState(0)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -433,20 +446,71 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                       delay: lantern.delay,
                     }}
                   >
-                    {/* Enhanced Lantern design */}
                     <div className="relative">
+                      {/* Outer pulsing glow */}
+                      <motion.div
+                        className="absolute -inset-4 bg-yellow-300/20 rounded-full blur-xl"
+                        animate={{
+                          scale: [1, 1.2, 1],
+                          opacity: [0.2, 0.4, 0.2],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: Math.random() * 2, // Random delay for each lantern
+                        }}
+                      />
+                      
+                      {/* Lantern body */}
                       <div className="w-8 h-10 bg-orange-400/80 rounded-full relative">
-                        {/* Inner glow */}
-                        <div className="absolute inset-0 bg-yellow-300/30 rounded-full blur-md" />
-                        {/* Top */}
+                        {/* Inner pulsing glow */}
+                        <motion.div
+                          className="absolute inset-0 bg-yellow-300/40 rounded-full blur-md"
+                          animate={{
+                            opacity: [0.3, 0.6, 0.3],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: Math.random() * 2, // Different delay for inner glow
+                          }}
+                        />
+                        
+                        {/* Lantern details */}
                         <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-4 h-1 bg-orange-700/80 rounded" />
-                        {/* Bottom */}
                         <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-orange-700/80 rounded" />
-                        {/* Outer glow */}
-                        <div className="absolute -inset-2 bg-yellow-300/20 rounded-full blur-xl" />
+                        
+                        {/* Central light source */}
+                        <motion.div
+                          className="absolute inset-1 bg-yellow-200/60 rounded-full blur-sm"
+                          animate={{
+                            opacity: [0.4, 0.8, 0.4],
+                          }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: Math.random() * 2, // Different delay for center
+                          }}
+                        />
                       </div>
+                      
                       {/* Ambient light effect */}
-                      <div className="absolute -inset-4 bg-yellow-300/10 rounded-full blur-2xl" />
+                      <motion.div
+                        className="absolute -inset-8 bg-yellow-300/10 rounded-full blur-2xl"
+                        animate={{
+                          scale: [1, 1.1, 1],
+                          opacity: [0.1, 0.3, 0.1],
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: Math.random() * 2, // Different delay for ambient
+                        }}
+                      />
                     </div>
                   </motion.div>
                 ))}
