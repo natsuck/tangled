@@ -23,6 +23,7 @@ export default function LockAndKey() {
   const unlockAudioRef = useRef<HTMLAudioElement | null>(null)
   const bgMusicRef = useRef<HTMLAudioElement | null>(null)
   const [audioInitialized, setAudioInitialized] = useState(false)
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   const [isDragging, setIsDragging] = useState(false)
 
   // Set initial key position
@@ -259,8 +260,6 @@ export default function LockAndKey() {
                 x: keyX,
                 y: keyY,
               }}
-              onDragStart={() => setIsDragging(true)}
-              onDragEnd={() => setIsDragging(false)}
               className="absolute cursor-grab active:cursor-grabbing"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
