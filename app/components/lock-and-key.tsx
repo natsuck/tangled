@@ -10,7 +10,7 @@ import { Slideshow } from "./slideshow"
 import { AUDIO_PATHS } from "../audio"
 
 const LOCK_SIZE = 40
-const KEY_SIZE = 32
+const KEY_SIZE = 40
 const COLLISION_THRESHOLD = 50
 
 export default function LockAndKey() {
