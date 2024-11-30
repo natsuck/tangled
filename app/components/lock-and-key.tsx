@@ -10,7 +10,7 @@ import { Slideshow } from "./slideshow"
 import { AUDIO_PATHS } from "../audio"
 
 const LOCK_SIZE = 40
-const KEY_SIZE = 40
+const KEY_SIZE = 32
 const COLLISION_THRESHOLD = 50
 
 export default function LockAndKey() {
@@ -28,8 +28,8 @@ export default function LockAndKey() {
   // Set initial key position
   React.useEffect(() => {
     const updateKeyPosition = () => {
-      keyX.set(100)
-      keyY.set(0)
+      keyX.set(150)
+      keyY.set(50)
     }
 
     updateKeyPosition()
@@ -142,9 +142,9 @@ export default function LockAndKey() {
     setIsUnlocked(false)
     setShowSlideshow(false)
     lockRotation.set(0)
-    // Reset key to initial position
-    keyX.set(100)
-    keyY.set(0)
+    // Reset key to updated initial position
+    keyX.set(150)
+    keyY.set(50)
     
     if (bgMusicRef.current) {
       bgMusicRef.current.pause()
@@ -248,10 +248,10 @@ export default function LockAndKey() {
             <motion.div
               drag
               dragConstraints={{
-                top: -100,
-                left: -100,
-                right: 100,
-                bottom: 100,
+                top: -150,
+                left: -150,
+                right: 150,
+                bottom: 150,
               }}
               dragElastic={0.1}
               dragMomentum={false}
