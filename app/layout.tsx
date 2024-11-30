@@ -5,8 +5,8 @@ import { Inter } from 'next/font/google'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Lock and Key Animation',
-  description: 'An interactive lock and key animation with a sweet message',
+  title: 'Unlock me',
+  description: 'HAHAHAHEHEHEH hindi to virus guys',
 }
 
 export default function RootLayout({
