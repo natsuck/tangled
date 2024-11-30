@@ -1,17 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { motion, useMotionValue, useTransform, animate, useSpring } from "framer-motion"
-import { Lock, Key, Heart, Sparkles } from 'lucide-react'
+import { motion, useMotionValue, animate, useSpring } from "framer-motion"
+import { Lock, Key } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import confetti from 'canvas-confetti'
 import { useRef, useState } from "react"
 import { Slideshow } from "./slideshow"
 import { AUDIO_PATHS } from "../audio"
 
-const LOCK_SIZE = 56
-const KEY_SIZE = 56
-const COLLISION_THRESHOLD = LOCK_SIZE / 2
+const LOCK_SIZE = 40
+const KEY_SIZE = 40
+const COLLISION_THRESHOLD = 50
 
 export default function LockAndKey() {
   const [isUnlocked, setIsUnlocked] = React.useState(false)
@@ -22,6 +22,25 @@ export default function LockAndKey() {
   const unlockAudioRef = useRef<HTMLAudioElement | null>(null)
   const bgMusicRef = useRef<HTMLAudioElement | null>(null)
 
+  // Set initial key position
+  React.useEffect(() => {
+    const updateKeyPosition = () => {
+      // Position key 100px to the right of center
+      keyX.set(100)
+      keyY.set(0)
+    }
+
+    // Set initial position
+    updateKeyPosition()
+
+    // Update position on window resize
+    window.addEventListener('resize', updateKeyPosition)
+
+    return () => {
+      window.removeEventListener('resize', updateKeyPosition)
+    }
+  }, [keyX, keyY])
+
   const checkCollision = React.useCallback(() => {
     const keyPos = { x: keyX.get(), y: keyY.get() }
     const distance = Math.sqrt(keyPos.x ** 2 + keyPos.y ** 2)
@@ -29,44 +48,39 @@ export default function LockAndKey() {
     if (distance < COLLISION_THRESHOLD && !isUnlocked) {
       setIsUnlocked(true)
       
+      // Play unlock sound
       if (unlockAudioRef.current) {
         unlockAudioRef.current.play()
       }
       
+      // Start background music
       if (bgMusicRef.current) {
         bgMusicRef.current.volume = 0.3
         bgMusicRef.current.play()
       }
 
-      lockRotation.set(0)
-      animate(lockRotation, [0, -10, 45], {
-        duration: 0.4,
-        times: [0, 0.3, 1],
+      // Unlock animation
+      animate(lockRotation, 90, {
         type: "spring",
-        stiffness: 200,
-        damping: 15
+        stiffness: 100,
+        damping: 10
       })
 
-      animate(keyX, [0, -5, 0], {
-        duration: 0.3,
-        times: [0, 0.5, 1]
-      })
-
+      // Success effects
       setTimeout(() => {
         setShowSlideshow(true)
         confetti({
-          particleCount: 50,
-          spread: 40,
+          particleCount: 100,
+          spread: 70,
           origin: { y: 0.6 }
         })
-      }, 500)
+      }, 800)
     }
   }, [isUnlocked, keyX, keyY, lockRotation])
 
   React.useEffect(() => {
     const unsubscribeX = keyX.onChange(checkCollision)
     const unsubscribeY = keyY.onChange(checkCollision)
-
     return () => {
       unsubscribeX()
       unsubscribeY()
@@ -77,8 +91,9 @@ export default function LockAndKey() {
     setIsUnlocked(false)
     setShowSlideshow(false)
     lockRotation.set(0)
+    // Reset key to initial position
     keyX.set(100)
-    keyY.set(100)
+    keyY.set(0)
     
     if (bgMusicRef.current) {
       bgMusicRef.current.pause()
@@ -87,10 +102,12 @@ export default function LockAndKey() {
   }
 
   return (
-    <div className="relative flex h-screen w-full items-center justify-center bg-gradient-to-br from-violet-100 via-pink-100 to-purple-200">
+    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-b from-neutral-950 to-black">
+      {/* Audio elements */}
       <audio ref={unlockAudioRef} src={AUDIO_PATHS.unlock} preload="auto" />
       <audio ref={bgMusicRef} src={AUDIO_PATHS.bgMusic} preload="auto" loop />
 
+      {/* Slideshow */}
       <Slideshow 
         isPlaying={showSlideshow} 
         onClose={() => {
@@ -100,97 +117,31 @@ export default function LockAndKey() {
         audioRef={bgMusicRef}
       />
 
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-            }}
-            animate={{
-              y: [0, -20, 0],
-              opacity: [0.2, 0.5, 0.2],
-            }}
-            transition={{
-              duration: 2 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          >
-            <Sparkles className="h-3 w-3 text-pink-300/40" />
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="relative h-64 w-64 rounded-full bg-white/20 backdrop-blur-lg shadow-lg flex items-center justify-center">
+      {/* Lock container */}
+      <div className="relative w-[300px] h-[300px] flex items-center justify-center">
+        {/* Lock circle background */}
+        <div className="absolute w-32 h-32 rounded-full bg-white/5 backdrop-blur-sm" />
+        
+        {/* Lock */}
         <motion.div
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          className="absolute"
           style={{ rotate: lockRotation }}
-          animate={isUnlocked ? {
-            scale: [1, 1.2, 1],
-          } : {}}
-          transition={{
-            duration: 0.5,
-            times: [0, 0.5, 1]
-          }}
         >
-          <motion.div
-            animate={isUnlocked ? {
-              filter: ["drop-shadow(0 0 0px #ec4899)", "drop-shadow(0 0 10px #ec4899)", "drop-shadow(0 0 5px #ec4899)"],
-            } : {}}
-            transition={{
-              duration: 1,
-              repeat: Infinity,
-              repeatType: "reverse"
-            }}
-          >
-            <Lock 
-              className={`h-${LOCK_SIZE} w-${LOCK_SIZE} transition-colors duration-300 ${
-                isUnlocked ? "text-pink-500" : "text-gray-700"
-              }`} 
-            />
-          </motion.div>
+          <Lock 
+            className={`w-${LOCK_SIZE} h-${LOCK_SIZE} transition-colors duration-300 ${
+              isUnlocked ? "text-pink-500" : "text-white/70"
+            }`} 
+          />
         </motion.div>
 
-        {isUnlocked && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-          >
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute"
-                initial={{
-                  rotate: (i * 45),
-                  x: 40,
-                }}
-                animate={{
-                  scale: [1, 1.5, 1],
-                  opacity: [0.5, 1, 0],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  delay: i * 0.15,
-                }}
-              >
-                <Sparkles className="h-4 w-4 text-pink-500" />
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-
+        {/* Key */}
         <motion.div
           drag
           dragConstraints={{
-            top: -300,
-            left: -300,
-            right: 300,
-            bottom: 300,
+            top: -100,
+            left: -100,
+            right: 100,
+            bottom: 100,
           }}
           dragElastic={0.1}
           dragMomentum={false}
@@ -198,22 +149,24 @@ export default function LockAndKey() {
             x: keyX,
             y: keyY,
           }}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
-          whileHover={{ scale: 1.1, rotate: 10 }}
+          className="absolute cursor-grab active:cursor-grabbing"
+          whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
         >
           <Key
-            className={`h-${KEY_SIZE} w-${KEY_SIZE} rotate-90 transition-all duration-300 ${
-              isUnlocked ? "text-pink-500 drop-shadow-lg" : "text-gray-700"
+            className={`w-${KEY_SIZE} h-${KEY_SIZE} rotate-90 transition-colors duration-300 ${
+              isUnlocked ? "text-pink-500" : "text-white/70"
             }`}
           />
         </motion.div>
       </div>
 
+      {/* Reset button */}
       {!showSlideshow && (
         <Button
           onClick={resetLock}
-          className="absolute bottom-8 bg-white/80 backdrop-blur-sm text-gray-800 hover:bg-white/90 shadow-md transition-all duration-300"
+          className="fixed bottom-8 bg-white/5 backdrop-blur-sm text-white/70 hover:bg-white/10 
+                     hover:text-white transition-all duration-300 border border-white/10"
         >
           Reset Lock
         </Button>
