@@ -49,7 +49,7 @@ export default function LockAndKey() {
   }, [keyX, keyY])
 
   // Initialize audio on first interaction
-  const initializeAudio = async () => {
+  const initializeAudio = React.useCallback(async () => {
     try {
       if (!audioInitialized && unlockAudioRef.current && bgMusicRef.current) {
         // Load the audio files
@@ -65,7 +65,7 @@ export default function LockAndKey() {
     } catch (error) {
       console.log("Audio initialization failed:", error)
     }
-  }
+  }, [audioInitialized])
 
   // Handle user interaction
   React.useEffect(() => {
@@ -82,7 +82,7 @@ export default function LockAndKey() {
       document.removeEventListener('click', handleInteraction)
       document.removeEventListener('touchstart', handleInteraction)
     }
-  }, [])
+  }, [initializeAudio])
 
   const playAudio = async (audioElement: HTMLAudioElement) => {
     try {
