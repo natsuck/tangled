@@ -85,6 +85,8 @@ const LYRICS = [
   }
 ]
 
+const TOTAL_IMAGES = 7;
+
 function formatTime(milliseconds: number) {
   const totalSeconds = Math.floor(milliseconds / 1000)
   const minutes = Math.floor(totalSeconds / 60)
@@ -137,7 +139,9 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
     }
 
     const imageInterval = setInterval(() => {
-      setCurrentImageIndex(prev => (prev + 1) % 7)
+      setTimeout(() => {
+        setCurrentImageIndex(prev => (prev + 1) % 7)
+      }, 100)
     }, 5000)
 
     return () => clearInterval(imageInterval)
@@ -171,6 +175,20 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 bg-gradient-to-b from-black to-neutral-900"
         >
+          {/* Preload all images in hidden div */}
+          <div className="hidden">
+            {[...Array(TOTAL_IMAGES)].map((_, index) => (
+              <Image
+                key={index}
+                src={`/images/${index + 1}.jpg`}
+                alt={`Preload image ${index + 1}`}
+                width={1}
+                height={1}
+                priority
+              />
+            ))}
+          </div>
+
           <Button
             variant="ghost"
             size="icon"
@@ -195,15 +213,17 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/30 group-hover:opacity-0 transition-opacity duration-300" />
                   
-                  <Image
-                    src={`/images/${currentImageIndex + 1}.jpg`}
-                    alt={`Slideshow image ${currentImageIndex + 1}`}
-                    fill
-                    className="object-cover rounded-2xl shadow-2xl"
-                    priority
-                    sizes="(max-width: 1280px) 90vw, 50vw"
-                    quality={100}
-                  />
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={`/images/${currentImageIndex + 1}.jpg`}
+                      alt={`Slideshow image ${currentImageIndex + 1}`}
+                      fill
+                      className="object-cover rounded-2xl shadow-2xl"
+                      priority
+                      sizes="(max-width: 1280px) 90vw, 50vw"
+                      quality={100}
+                    />
+                  </div>
 
                   <div className="absolute -inset-0.5 rounded-2xl blur opacity-50" />
                 </motion.div>
