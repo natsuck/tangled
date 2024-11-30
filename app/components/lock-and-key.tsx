@@ -26,7 +26,6 @@ export default function LockAndKey() {
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   const [isDragging, setIsDragging] = useState(false)
 
-  // Set initial key position
   React.useEffect(() => {
     const updateKeyPosition = () => {
       keyX.set(150)
@@ -37,7 +36,6 @@ export default function LockAndKey() {
 
     window.addEventListener('resize', updateKeyPosition)
     
-    // Set hasInteracted on any user interaction
     const handleInteraction = () => setHasInteracted(true)
     document.addEventListener('click', handleInteraction)
     document.addEventListener('touchstart', handleInteraction)
@@ -49,15 +47,12 @@ export default function LockAndKey() {
     }
   }, [keyX, keyY])
 
-  // Initialize audio on first interaction
   const initializeAudio = React.useCallback(async () => {
     try {
       if (!audioInitialized && unlockAudioRef.current && bgMusicRef.current) {
-        // Load the audio files
         await unlockAudioRef.current.load()
         await bgMusicRef.current.load()
         
-        // Set volume
         unlockAudioRef.current.volume = 0.5
         bgMusicRef.current.volume = 0.5
 
@@ -68,14 +63,12 @@ export default function LockAndKey() {
     }
   }, [audioInitialized])
 
-  // Handle user interaction
   React.useEffect(() => {
     const handleInteraction = async () => {
       setHasInteracted(true)
       await initializeAudio()
     }
 
-    // Listen for both touch and click events
     document.addEventListener('click', handleInteraction, { once: true })
     document.addEventListener('touchstart', handleInteraction, { once: true })
 
@@ -105,14 +98,12 @@ export default function LockAndKey() {
     if (distance < COLLISION_THRESHOLD && !isUnlocked && hasInteracted) {
       setIsUnlocked(true)
       
-      // Play audio with async handling
       if (unlockAudioRef.current && bgMusicRef.current) {
         playAudio(unlockAudioRef.current)
           .then(() => playAudio(bgMusicRef.current!))
           .catch(error => console.log("Audio sequence failed:", error))
       }
 
-      // Unlock animation
       animate(lockRotation, 90, {
         type: "spring",
         stiffness: 100,
@@ -143,7 +134,6 @@ export default function LockAndKey() {
     setIsUnlocked(false)
     setShowSlideshow(false)
     lockRotation.set(0)
-    // Reset key to updated initial position
     keyX.set(150)
     keyY.set(50)
     
@@ -155,7 +145,6 @@ export default function LockAndKey() {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-b from-neutral-950 to-black">
-      {/* Audio elements */}
       <audio 
         ref={unlockAudioRef} 
         src={AUDIO_PATHS.unlock} 
@@ -172,7 +161,6 @@ export default function LockAndKey() {
         muted={!hasInteracted}
       />
 
-      {/* Initial interaction screen */}
       {!hasInteracted ? (
         <motion.div 
           className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-95"
@@ -199,7 +187,6 @@ export default function LockAndKey() {
               Tap the key first to enable audio, then drag it to the lock.
             </div>
             
-            {/* Interactive Key in initial screen */}
             <motion.div
               className="mt-8 cursor-pointer"
               animate={{ 
@@ -228,12 +215,9 @@ export default function LockAndKey() {
             audioRef={bgMusicRef}
           />
 
-          {/* Lock container */}
           <div className="relative w-[300px] h-[300px] flex items-center justify-center">
-            {/* Lock circle background */}
             <div className="absolute w-32 h-32 rounded-full bg-white/5 backdrop-blur-sm" />
             
-            {/* Lock */}
             <motion.div
               className="absolute"
               style={{ rotate: lockRotation }}
@@ -245,7 +229,6 @@ export default function LockAndKey() {
               />
             </motion.div>
 
-            {/* Key */}
             <motion.div
               drag
               dragConstraints={{
@@ -272,7 +255,6 @@ export default function LockAndKey() {
             </motion.div>
           </div>
 
-          {/* Reset button */}
           {!showSlideshow && (
             <Button
               onClick={resetLock}

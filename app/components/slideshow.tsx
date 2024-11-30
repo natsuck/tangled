@@ -88,7 +88,6 @@ interface SlideshowProps {
   audioRef?: React.RefObject<HTMLAudioElement>;
 }
 
-// Add this animation utility at the top of the file
 const floatingLanternAnimation = {
   initial: { y: 10, opacity: 0 },
   animate: { 
@@ -102,7 +101,6 @@ const floatingLanternAnimation = {
   }
 };
 
-// Update the Lantern interface
 interface Lantern {
   id: number;
   x: number;
@@ -112,7 +110,6 @@ interface Lantern {
   delay: number;
 }
 
-// Add this new animation for random drifting
 const driftingLanternAnimation = {
   initial: { opacity: 0, scale: 0 },
   animate: { 
@@ -125,7 +122,6 @@ const driftingLanternAnimation = {
   }
 };
 
-// Add this new animation for the pulsing glow
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const pulsingGlowAnimation = {
   animate: {
@@ -146,14 +142,12 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
   const [showLanterns, setShowLanterns] = useState(false);
   const [lanterns, setLanterns] = useState<Lantern[]>([]);
 
-  // Get the current group of three lyrics
   const getCurrentLyricsGroup = () => {
     const groupIndex = Math.floor(currentLyricIndex / 3)
     const startIndex = groupIndex * 3
     return LYRICS.slice(startIndex, startIndex + 3)
   }
 
-  // Handle lyrics timing
   useEffect(() => {
     if (!isPlaying) {
       setCurrentLyricIndex(0)
@@ -172,7 +166,6 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
     return () => clearInterval(timer)
   }, [isPlaying, audioRef])
 
-  // Handle image slideshow timing independently
   useEffect(() => {
     if (!isPlaying) {
       setCurrentImageIndex(0)
@@ -189,7 +182,6 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
   }, [isPlaying])
 
   useEffect(() => {
-    // Find current lyric based on elapsed time
     const currentLyric = LYRICS.findIndex(
       (lyric, index) => {
         const nextLyric = LYRICS[index + 1]
@@ -207,13 +199,10 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
     }
   }, [elapsedTime, audioRef, onClose])
 
-  // Update the createLantern function to handle viewport sizes better
   const createLantern = (id: number): Lantern => {
-    // Get current viewport dimensions
     const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
     const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0;
     
-    // Add padding to keep lanterns away from edges
     const padding = 60;
     
     return {
@@ -226,7 +215,6 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
     };
   };
 
-  // Add this effect to handle lantern spawning
   useEffect(() => {
     if (elapsedTime >= 41000 && !showLanterns) {
       setShowLanterns(true);
@@ -235,11 +223,9 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
     }
   }, [elapsedTime, showLanterns]);
 
-  // Update the lantern movement effect
   useEffect(() => {
     if (!showLanterns) return;
 
-    // Handle viewport resize
     const handleResize = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
@@ -270,7 +256,6 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
           const viewportHeight = window.innerHeight;
           const padding = 60;
 
-          // Bounce off edges with padding
           if (newX <= padding || newX >= viewportWidth - padding) {
             newVelocityX = -newVelocityX;
             newX = newX <= padding ? padding : viewportWidth - padding;
@@ -308,7 +293,6 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 bg-gradient-to-b from-black to-neutral-900"
         >
-          {/* Floating lanterns effect */}
           <div className="fixed inset-0 overflow-hidden pointer-events-none">
             {[...Array(15)].map((_, i) => (
               <motion.div
@@ -332,10 +316,8 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
             ))}
           </div>
 
-          {/* Warm ambient glow */}
           <div className="fixed inset-0 bg-gradient-to-t from-purple-900/10 via-orange-400/5 to-transparent mix-blend-soft-light pointer-events-none" />
 
-          {/* Preload all images in hidden div */}
           <div className="hidden">
             {[...Array(TOTAL_IMAGES)].map((_, index) => (
               <Image
@@ -358,9 +340,7 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
             <X className="h-6 w-6" />
           </Button>
 
-          {/* Main container */}
           <div className="h-full flex flex-col xl:flex-row">
-            {/* Image and Duration section */}
             <div className="w-full xl:w-[50%] h-fit xl:h-full flex flex-col">
               <div className="flex-1 flex items-center justify-center p-6 xl:p-12">
                 <motion.div 
@@ -371,7 +351,6 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                   transition={{ duration: 0.5 }}
                   className="relative w-full xl:w-[85%] aspect-square mx-auto group max-w-2xl"
                 >
-                  {/* Warm glow behind image */}
                   <div className="absolute -inset-4 bg-orange-300/10 blur-2xl rounded-full transform scale-105 group-hover:bg-orange-300/20 transition-all duration-700" />
                   
                   <div className="absolute inset-0 bg-gradient-to-b from-orange-300/10 to-purple-900/20 group-hover:opacity-0 transition-opacity duration-300 rounded-2xl" />
@@ -388,15 +367,12 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                     />
                   </div>
 
-                  {/* Enhanced glow effect */}
                   <div className="absolute -inset-0.5 rounded-2xl blur opacity-50 bg-gradient-to-br from-orange-300/30 to-purple-600/30" />
                 </motion.div>
               </div>
 
-              {/* Duration Controls with max-width */}
               <div className="px-6 pb-6 xl:px-12 xl:pb-12 flex justify-center">
                 <div className="w-full max-w-md xl:max-w-xl">
-                  {/* Progress bar */}
                   <div className="h-1 bg-white/5 rounded-full overflow-hidden backdrop-blur-sm">
                     <motion.div
                       className="h-full bg-white/50"
@@ -408,7 +384,6 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                     />
                   </div>
 
-                  {/* Time Display */}
                   <div className="mt-3 flex items-center justify-between text-sm font-medium">
                     <span className="text-white/60">{formatTime(elapsedTime)}</span>
                     <span className="text-white/60">
@@ -419,7 +394,6 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
               </div>
             </div>
 
-            {/* Lyrics section with max-width */}
             <div className="w-full xl:w-[50%] flex-1 xl:h-full flex flex-col p-6 xl:p-12">
               <div className="flex-1 flex items-center justify-center">
                 <AnimatePresence mode="wait">
@@ -465,7 +439,6 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
             </div>
           </div>
 
-          {/* Add the lanterns container */}
           <AnimatePresence>
             {showLanterns && (
               <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -486,7 +459,6 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                     }}
                   >
                     <div className="relative w-6 h-8 sm:w-8 sm:h-10"> {/* Smaller size on mobile */}
-                      {/* Outer pulsing glow */}
                       <motion.div
                         className="absolute -inset-4 bg-yellow-300/20 rounded-full blur-xl"
                         animate={{
@@ -501,9 +473,7 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                         }}
                       />
                       
-                      {/* Lantern body */}
                       <div className="w-8 h-10 bg-orange-400/80 rounded-full relative">
-                        {/* Inner pulsing glow */}
                         <motion.div
                           className="absolute inset-0 bg-yellow-300/40 rounded-full blur-md"
                           animate={{
@@ -517,11 +487,9 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                           }}
                         />
                         
-                        {/* Lantern details */}
                         <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-4 h-1 bg-orange-700/80 rounded" />
                         <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-orange-700/80 rounded" />
                         
-                        {/* Central light source */}
                         <motion.div
                           className="absolute inset-1 bg-yellow-200/60 rounded-full blur-sm"
                           animate={{
@@ -535,11 +503,10 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                           }}
                         />
                       </div>
-                      
-                      {/* Ambient light effect */}
-                      <motion.div
-                        className="absolute -inset-8 bg-yellow-300/10 rounded-full blur-2xl"
-                        animate={{
+                        
+                        <motion.div
+                          className="absolute -inset-8 bg-yellow-300/10 rounded-full blur-2xl"
+                          animate={{
                           scale: [1, 1.1, 1],
                           opacity: [0.1, 0.3, 0.1],
                         }}
