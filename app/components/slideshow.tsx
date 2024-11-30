@@ -1,6 +1,6 @@
 "use client"
 
-import { motion, AnimatePresence, useAnimation } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { X } from 'lucide-react'
@@ -126,6 +126,7 @@ const driftingLanternAnimation = {
 };
 
 // Add this new animation for the pulsing glow
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const pulsingGlowAnimation = {
   animate: {
     scale: [1, 1.2, 1],
@@ -232,10 +233,12 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
     const animationFrame = requestAnimationFrame(function animate() {
       setLanterns(prevLanterns => 
         prevLanterns.map(lantern => {
+          /* eslint-disable prefer-const */
           let newX = lantern.x + lantern.velocityX;
           let newY = lantern.y + lantern.velocityY;
           let newVelocityX = lantern.velocityX;
           let newVelocityY = lantern.velocityY;
+          /* eslint-enable prefer-const */
 
           // Bounce off edges
           if (newX <= 0 || newX >= window.innerWidth - 50) {
