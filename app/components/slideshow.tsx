@@ -1,6 +1,6 @@
 "use client"
 
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useAnimation } from "framer-motion"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { X } from 'lucide-react'
@@ -8,80 +8,68 @@ import { Button } from "@/components/ui/button"
 
 const LYRICS = [
   {
-    text: "Kapag naaalala ko ang mga araw na magkasama tayong dalawa",
-    startTime: 0,
+    text: "All those days watching from the windows",
+    startTime: 2000,
   },
   {
-    text: "Ngiti at luha sa aking mga mata ganun na pala tayo dati kasaya",
+    text: "All those years outside looking in",
     startTime: 7000,
   },
   {
-    text: "Yung tipong kapag tayo'y nagkatitigan",
-    startTime: 14000,
+    text: "All that time never even knowing",
+    startTime: 12000,
   },
   {
-    text: "Magngingitian para bang nahihibang",
-    startTime: 18000,
+    text: "Just how blind I've been",
+    startTime: 17000,
   },
   {
-    text: "Mag-iingay kahit sobrang tahimik ng kapaligiran",
-    startTime: 21000,
+    text: "Now I'm here, blinking in the starlight",
+    startTime: 22000,
   },
   {
-    text: "Kahit may nagrereklamo na'y wala tayong pakialam",
-    startTime: 26000,
+    text: "Now I'm here, suddenly I see",
+    startTime: 27000,
   },
   {
-    text: "Panahong nandun ka pa laging pumupunta",
-    startTime: 29000,
+    text: "Standing here, it's all so clear",
+    startTime: 31000,
   },
   {
-    text: "'Di inaasahan may sorpresa ka laging dala",
-    startTime: 34000,
+    text: "I'm where I'm meant to be",
+    startTime: 36000,
   },
   {
-    text: "Ang saya saya ayoko lang pahalata",
-    startTime: 38000,
-  },
-  {
-    text: "Kase okay na naman ako basta makasama ka",
+    text: "And at last I see the light",
     startTime: 41000,
   },
   {
-    text: "Kaso lang wala na pero alam ko na masaya ka na",
+    text: "And it's like the fog has lifted",
     startTime: 45000,
   },
   {
-    text: "Sa mundo ko wala nang makagagawa",
-    startTime: 51000,
+    text: "And at last I see the light",
+    startTime: 50000,
   },
   {
-    text: "Makakatumbas ng 'yong napadama",
-    startTime: 54000,
+    text: "And it's like the sky is new",
+    startTime: 55000,
   },
   {
-    text: "Kaya salamat sa pag-ibig mo",
-    startTime: 57000,
-  },
-  {
-    text: "Pag-ibig mo lagi kang nasa puso't isip ko isip ko",
+    text: "And it's warm and real and bright",
     startTime: 60000,
   },
   {
-    text: "At inaamin ko na namimiss kita na namimiss kita",
+    text: "And the world has somehow shifted",
     startTime: 64000,
   },
   {
-    text: "Sa'kin ikaw pa rin ang bibi ko ang bibi ko",
-    startTime: 73000,
+    text: "All at once everything looks different",
+    startTime: 72000,
   },
   {
-    text: "Kahit wala ka na sa piling ko sa piling ko",
-    startTime: 75000,
-  },
-  {
-    text: "Pangakong ipagdarasal pa rin kita ipagdadasal pa rin kita",
-    startTime: 79000,
+    text: "Now that I see you",
+    startTime: 78000,
   }
 ]
 
@@ -100,10 +88,49 @@ interface SlideshowProps {
   audioRef?: React.RefObject<HTMLAudioElement>;
 }
 
+// Add this animation utility at the top of the file
+const floatingLanternAnimation = {
+  initial: { y: 10, opacity: 0 },
+  animate: { 
+    y: [-20, 0, -20], 
+    opacity: [0.4, 0.7, 0.4],
+  },
+  transition: {
+    duration: 6,
+    repeat: Infinity,
+    ease: "easeInOut"
+  }
+};
+
+// Update the Lantern interface
+interface Lantern {
+  id: number;
+  x: number;
+  y: number;
+  velocityX: number;
+  velocityY: number;
+  delay: number;
+}
+
+// Add this new animation for random drifting
+const driftingLanternAnimation = {
+  initial: { opacity: 0, scale: 0 },
+  animate: { 
+    opacity: 1, 
+    scale: 1,
+    transition: {
+      duration: 1,
+      ease: "easeOut",
+    }
+  }
+};
+
 export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
   const [currentLyricIndex, setCurrentLyricIndex] = useState(0)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [showLanterns, setShowLanterns] = useState(false);
+  const [lanterns, setLanterns] = useState<Lantern[]>([]);
 
   // Get the current group of three lyrics
   const getCurrentLyricsGroup = () => {
@@ -166,6 +193,61 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
     }
   }, [elapsedTime, audioRef, onClose])
 
+  // Add this function to create a lantern with random position and velocity
+  const createLantern = (id: number): Lantern => ({
+    id,
+    x: Math.random() * (window.innerWidth - 50), // Account for lantern width
+    y: Math.random() * (window.innerHeight - 50), // Account for lantern height
+    velocityX: (Math.random() - 0.5) * 0.5, // Random velocity between -0.25 and 0.25
+    velocityY: (Math.random() - 0.5) * 0.5,
+    delay: Math.random() * 2
+  });
+
+  // Add this effect to handle lantern spawning
+  useEffect(() => {
+    if (elapsedTime >= 41000 && !showLanterns) {
+      setShowLanterns(true);
+      const newLanterns = Array.from({ length: 20 }, (_, i) => createLantern(i));
+      setLanterns(newLanterns);
+    }
+  }, [elapsedTime, showLanterns]);
+
+  // Add this effect to handle lantern movement
+  useEffect(() => {
+    if (!showLanterns) return;
+
+    const animationFrame = requestAnimationFrame(function animate() {
+      setLanterns(prevLanterns => 
+        prevLanterns.map(lantern => {
+          let newX = lantern.x + lantern.velocityX;
+          let newY = lantern.y + lantern.velocityY;
+          let newVelocityX = lantern.velocityX;
+          let newVelocityY = lantern.velocityY;
+
+          // Bounce off edges
+          if (newX <= 0 || newX >= window.innerWidth - 50) {
+            newVelocityX = -newVelocityX;
+          }
+          if (newY <= 0 || newY >= window.innerHeight - 50) {
+            newVelocityY = -newVelocityY;
+          }
+
+          return {
+            ...lantern,
+            x: newX,
+            y: newY,
+            velocityX: newVelocityX,
+            velocityY: newVelocityY
+          };
+        })
+      );
+
+      requestAnimationFrame(animate);
+    });
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [showLanterns]);
+
   return (
     <AnimatePresence mode="wait">
       {isPlaying && (
@@ -175,6 +257,33 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 bg-gradient-to-b from-black to-neutral-900"
         >
+          {/* Floating lanterns effect */}
+          <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            {[...Array(15)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 bg-yellow-500/30 rounded-full blur-sm"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                initial="initial"
+                animate="animate"
+                custom={i}
+                variants={floatingLanternAnimation}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  delay: i * 0.2,
+                  ease: "easeInOut"
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Warm ambient glow */}
+          <div className="fixed inset-0 bg-gradient-to-t from-purple-900/10 via-orange-400/5 to-transparent mix-blend-soft-light pointer-events-none" />
+
           {/* Preload all images in hidden div */}
           <div className="hidden">
             {[...Array(TOTAL_IMAGES)].map((_, index) => (
@@ -211,7 +320,10 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                   transition={{ duration: 0.5 }}
                   className="relative w-full xl:w-[85%] aspect-square mx-auto group max-w-2xl"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/30 group-hover:opacity-0 transition-opacity duration-300" />
+                  {/* Warm glow behind image */}
+                  <div className="absolute -inset-4 bg-orange-300/10 blur-2xl rounded-full transform scale-105 group-hover:bg-orange-300/20 transition-all duration-700" />
+                  
+                  <div className="absolute inset-0 bg-gradient-to-b from-orange-300/10 to-purple-900/20 group-hover:opacity-0 transition-opacity duration-300 rounded-2xl" />
                   
                   <div className="relative w-full h-full">
                     <Image
@@ -225,7 +337,8 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                     />
                   </div>
 
-                  <div className="absolute -inset-0.5 rounded-2xl blur opacity-50" />
+                  {/* Enhanced glow effect */}
+                  <div className="absolute -inset-0.5 rounded-2xl blur opacity-50 bg-gradient-to-br from-orange-300/30 to-purple-600/30" />
                 </motion.div>
               </div>
 
@@ -272,11 +385,11 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                       return (
                         <motion.div
                           key={absoluteIndex}
-                          className={`py-1.5 xl:py-2 text-lg xl:text-2xl transition-all duration-500 text-center xl:text-left ${
-                            absoluteIndex === currentLyricIndex
-                              ? 'text-white font-medium scale-105 xl:translate-x-4'
+                          className={`py-1.5 xl:py-2 text-lg xl:text-2xl transition-all duration-500 text-center xl:text-left 
+                            ${absoluteIndex === currentLyricIndex
+                              ? 'text-white font-medium scale-105 xl:translate-x-4 text-shadow-glow'
                               : 'text-white/30'
-                          }`}
+                            }`}
                           animate={
                             absoluteIndex === currentLyricIndex
                               ? { 
@@ -300,6 +413,46 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
               </div>
             </div>
           </div>
+
+          {/* Add the lanterns container */}
+          <AnimatePresence>
+            {showLanterns && (
+              <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                {lanterns.map((lantern) => (
+                  <motion.div
+                    key={lantern.id}
+                    className="absolute"
+                    style={{ 
+                      left: lantern.x,
+                      top: lantern.y,
+                    }}
+                    initial="initial"
+                    animate="animate"
+                    variants={driftingLanternAnimation}
+                    transition={{
+                      delay: lantern.delay,
+                    }}
+                  >
+                    {/* Enhanced Lantern design */}
+                    <div className="relative">
+                      <div className="w-8 h-10 bg-orange-400/80 rounded-full relative">
+                        {/* Inner glow */}
+                        <div className="absolute inset-0 bg-yellow-300/30 rounded-full blur-md" />
+                        {/* Top */}
+                        <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-4 h-1 bg-orange-700/80 rounded" />
+                        {/* Bottom */}
+                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-orange-700/80 rounded" />
+                        {/* Outer glow */}
+                        <div className="absolute -inset-2 bg-yellow-300/20 rounded-full blur-xl" />
+                      </div>
+                      {/* Ambient light effect */}
+                      <div className="absolute -inset-4 bg-yellow-300/10 rounded-full blur-2xl" />
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>

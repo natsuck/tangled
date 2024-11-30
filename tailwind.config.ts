@@ -55,7 +55,10 @@ export default {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+  		textShadow: {
+  			'glow': '0 0 10px rgba(255,200,150,0.5)',
+  		},
   	}
   },
   plugins: [require("tailwindcss-animate")],
