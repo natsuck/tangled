@@ -16,47 +16,98 @@ const COLLISION_THRESHOLD = 50
 export default function LockAndKey() {
   const [isUnlocked, setIsUnlocked] = React.useState(false)
   const [showSlideshow, setShowSlideshow] = useState(false)
+  const [hasInteracted, setHasInteracted] = useState(false)
   const keyX = useMotionValue(0)
   const keyY = useMotionValue(0)
   const lockRotation = useSpring(0, { stiffness: 300, damping: 20 })
   const unlockAudioRef = useRef<HTMLAudioElement | null>(null)
   const bgMusicRef = useRef<HTMLAudioElement | null>(null)
+  const [audioInitialized, setAudioInitialized] = useState(false)
 
   // Set initial key position
   React.useEffect(() => {
     const updateKeyPosition = () => {
-      // Position key 100px to the right of center
       keyX.set(100)
       keyY.set(0)
     }
 
-    // Set initial position
     updateKeyPosition()
 
-    // Update position on window resize
     window.addEventListener('resize', updateKeyPosition)
+    
+    // Set hasInteracted on any user interaction
+    const handleInteraction = () => setHasInteracted(true)
+    document.addEventListener('click', handleInteraction)
+    document.addEventListener('touchstart', handleInteraction)
 
     return () => {
       window.removeEventListener('resize', updateKeyPosition)
+      document.removeEventListener('click', handleInteraction)
+      document.removeEventListener('touchstart', handleInteraction)
     }
   }, [keyX, keyY])
+
+  // Initialize audio on first interaction
+  const initializeAudio = async () => {
+    try {
+      if (!audioInitialized && unlockAudioRef.current && bgMusicRef.current) {
+        // Load the audio files
+        await unlockAudioRef.current.load()
+        await bgMusicRef.current.load()
+        
+        // Set volume
+        unlockAudioRef.current.volume = 0.5
+        bgMusicRef.current.volume = 0.3
+
+        setAudioInitialized(true)
+      }
+    } catch (error) {
+      console.log("Audio initialization failed:", error)
+    }
+  }
+
+  // Handle user interaction
+  React.useEffect(() => {
+    const handleInteraction = async () => {
+      setHasInteracted(true)
+      await initializeAudio()
+    }
+
+    // Listen for both touch and click events
+    document.addEventListener('click', handleInteraction, { once: true })
+    document.addEventListener('touchstart', handleInteraction, { once: true })
+
+    return () => {
+      document.removeEventListener('click', handleInteraction)
+      document.removeEventListener('touchstart', handleInteraction)
+    }
+  }, [])
+
+  const playAudio = async (audioElement: HTMLAudioElement) => {
+    try {
+      if (audioElement.paused) {
+        const playPromise = audioElement.play()
+        if (playPromise !== undefined) {
+          await playPromise
+        }
+      }
+    } catch (error) {
+      console.log("Audio playback failed:", error)
+    }
+  }
 
   const checkCollision = React.useCallback(() => {
     const keyPos = { x: keyX.get(), y: keyY.get() }
     const distance = Math.sqrt(keyPos.x ** 2 + keyPos.y ** 2)
     
-    if (distance < COLLISION_THRESHOLD && !isUnlocked) {
+    if (distance < COLLISION_THRESHOLD && !isUnlocked && hasInteracted) {
       setIsUnlocked(true)
       
-      // Play unlock sound
-      if (unlockAudioRef.current) {
-        unlockAudioRef.current.play()
-      }
-      
-      // Start background music
-      if (bgMusicRef.current) {
-        bgMusicRef.current.volume = 0.3
-        bgMusicRef.current.play()
+      // Play audio with async handling
+      if (unlockAudioRef.current && bgMusicRef.current) {
+        playAudio(unlockAudioRef.current)
+          .then(() => playAudio(bgMusicRef.current!))
+          .catch(error => console.log("Audio sequence failed:", error))
       }
 
       // Unlock animation
@@ -66,7 +117,6 @@ export default function LockAndKey() {
         damping: 10
       })
 
-      // Success effects
       setTimeout(() => {
         setShowSlideshow(true)
         confetti({
@@ -76,7 +126,7 @@ export default function LockAndKey() {
         })
       }, 800)
     }
-  }, [isUnlocked, keyX, keyY, lockRotation])
+  }, [isUnlocked, keyX, keyY, lockRotation, hasInteracted])
 
   React.useEffect(() => {
     const unsubscribeX = keyX.onChange(checkCollision)
@@ -104,72 +154,126 @@ export default function LockAndKey() {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-b from-neutral-950 to-black">
       {/* Audio elements */}
-      <audio ref={unlockAudioRef} src={AUDIO_PATHS.unlock} preload="auto" />
-      <audio ref={bgMusicRef} src={AUDIO_PATHS.bgMusic} preload="auto" loop />
-
-      {/* Slideshow */}
-      <Slideshow 
-        isPlaying={showSlideshow} 
-        onClose={() => {
-          setShowSlideshow(false)
-          resetLock()
-        }} 
-        audioRef={bgMusicRef}
+      <audio 
+        ref={unlockAudioRef} 
+        src={AUDIO_PATHS.unlock} 
+        preload="auto"
+        playsInline
+        muted={!hasInteracted}
+      />
+      <audio 
+        ref={bgMusicRef} 
+        src={AUDIO_PATHS.bgMusic} 
+        preload="auto" 
+        loop
+        playsInline
+        muted={!hasInteracted}
       />
 
-      {/* Lock container */}
-      <div className="relative w-[300px] h-[300px] flex items-center justify-center">
-        {/* Lock circle background */}
-        <div className="absolute w-32 h-32 rounded-full bg-white/5 backdrop-blur-sm" />
-        
-        {/* Lock */}
-        <motion.div
-          className="absolute"
-          style={{ rotate: lockRotation }}
+      {/* Initial interaction screen */}
+      {!hasInteracted ? (
+        <motion.div 
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-95"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
         >
-          <Lock 
-            className={`w-${LOCK_SIZE} h-${LOCK_SIZE} transition-colors duration-300 ${
-              isUnlocked ? "text-pink-500" : "text-white/70"
-            }`} 
-          />
+          <motion.div
+            className="text-center space-y-6 p-6"
+            animate={{ 
+              scale: [1, 1.02, 1],
+              opacity: [0.8, 1, 0.8] 
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              repeatType: "reverse"
+            }}
+          >
+            <div className="text-white/90 text-2xl md:text-3xl font-medium mb-4">
+              Tap to Begin
+            </div>
+            <div className="text-white/50 text-sm md:text-base max-w-md mx-auto">
+              This experience includes audio. Tap anywhere to enable sound and start.
+            </div>
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            >
+              <div className="text-pink-500/70 text-4xl">↓</div>
+            </motion.div>
+          </motion.div>
         </motion.div>
-
-        {/* Key */}
-        <motion.div
-          drag
-          dragConstraints={{
-            top: -100,
-            left: -100,
-            right: 100,
-            bottom: 100,
-          }}
-          dragElastic={0.1}
-          dragMomentum={false}
-          style={{
-            x: keyX,
-            y: keyY,
-          }}
-          className="absolute cursor-grab active:cursor-grabbing"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Key
-            className={`w-${KEY_SIZE} h-${KEY_SIZE} rotate-90 transition-colors duration-300 ${
-              isUnlocked ? "text-pink-500" : "text-white/70"
-            }`}
+      ) : (
+        <>
+          <Slideshow 
+            isPlaying={showSlideshow} 
+            onClose={() => {
+              setShowSlideshow(false)
+              resetLock()
+            }} 
+            audioRef={bgMusicRef}
           />
-        </motion.div>
-      </div>
 
-      {/* Reset button */}
-      {!showSlideshow && (
-        <Button
-          onClick={resetLock}
-          className="fixed bottom-8 bg-white/5 backdrop-blur-sm text-white/70 hover:bg-white/10 
-                     hover:text-white transition-all duration-300 border border-white/10"
-        >
-          Reset Lock
-        </Button>
+          {/* Lock container */}
+          <div className="relative w-[300px] h-[300px] flex items-center justify-center">
+            {/* Lock circle background */}
+            <div className="absolute w-32 h-32 rounded-full bg-white/5 backdrop-blur-sm" />
+            
+            {/* Lock */}
+            <motion.div
+              className="absolute"
+              style={{ rotate: lockRotation }}
+            >
+              <Lock 
+                className={`w-${LOCK_SIZE} h-${LOCK_SIZE} transition-colors duration-300 ${
+                  isUnlocked ? "text-pink-500" : "text-white/70"
+                }`} 
+              />
+            </motion.div>
+
+            {/* Key */}
+            <motion.div
+              drag
+              dragConstraints={{
+                top: -100,
+                left: -100,
+                right: 100,
+                bottom: 100,
+              }}
+              dragElastic={0.1}
+              dragMomentum={false}
+              style={{
+                x: keyX,
+                y: keyY,
+              }}
+              className="absolute cursor-grab active:cursor-grabbing"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Key
+                className={`w-${KEY_SIZE} h-${KEY_SIZE} rotate-90 transition-colors duration-300 ${
+                  isUnlocked ? "text-pink-500" : "text-white/70"
+                }`}
+              />
+            </motion.div>
+          </div>
+
+          {/* Reset button */}
+          {!showSlideshow && (
+            <Button
+              onClick={resetLock}
+              className="fixed bottom-8 bg-white/5 backdrop-blur-sm text-white/70 hover:bg-white/10 
+                         hover:text-white transition-all duration-300 border border-white/10"
+            >
+              Reset Lock
+            </Button>
+          )}
+        </>
       )}
     </div>
   )
