@@ -180,17 +180,18 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
             <X className="h-6 w-6" />
           </Button>
 
-          <div className="h-full flex">
-            {/* Left side - Image and Duration */}
-            <div className="w-[50%] h-full flex flex-col">
-              <div className="flex-1 flex items-center justify-center p-12">
+          {/* Main container */}
+          <div className="h-full flex flex-col xl:flex-row">
+            {/* Image and Duration section */}
+            <div className="w-full xl:w-[50%] h-fit xl:h-full flex flex-col">
+              <div className="flex-1 flex items-center justify-center p-6 xl:p-12">
                 <motion.div 
                   key={currentImageIndex}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="relative w-[85%] aspect-square mx-auto group"
+                  className="relative w-full xl:w-[85%] aspect-square mx-auto group max-w-2xl"
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/30 group-hover:opacity-0 transition-opacity duration-300" />
                   
@@ -200,7 +201,7 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                     fill
                     className="object-cover rounded-2xl shadow-2xl"
                     priority
-                    sizes="50vw"
+                    sizes="(max-width: 1280px) 90vw, 50vw"
                     quality={100}
                   />
 
@@ -208,33 +209,35 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                 </motion.div>
               </div>
 
-              {/* Duration Controls */}
-              <div className="px-12 pb-12">
-                {/* Progress bar */}
-                <div className="h-1 bg-white/5 rounded-full overflow-hidden backdrop-blur-sm">
-                  <motion.div
-                    className="h-full bg-white/50"
-                    style={{
-                      width: audioRef?.current 
-                        ? `${(audioRef.current.currentTime / audioRef.current.duration) * 100}%`
-                        : `${(elapsedTime / (LYRICS[LYRICS.length - 1].startTime + 3000)) * 100}%`
-                    }}
-                  />
-                </div>
+              {/* Duration Controls with max-width */}
+              <div className="px-6 pb-6 xl:px-12 xl:pb-12 flex justify-center">
+                <div className="w-full max-w-md xl:max-w-xl">
+                  {/* Progress bar */}
+                  <div className="h-1 bg-white/5 rounded-full overflow-hidden backdrop-blur-sm">
+                    <motion.div
+                      className="h-full bg-white/50"
+                      style={{
+                        width: audioRef?.current 
+                          ? `${(audioRef.current.currentTime / audioRef.current.duration) * 100}%`
+                          : `${(elapsedTime / (LYRICS[LYRICS.length - 1].startTime + 3000)) * 100}%`
+                      }}
+                    />
+                  </div>
 
-                {/* Time Display */}
-                <div className="mt-3 flex items-center justify-between text-sm font-medium">
-                  <span className="text-white/60">{formatTime(elapsedTime)}</span>
-                  <span className="text-white/60">
-                    {audioRef?.current ? formatTime(audioRef.current.duration * 1000) : '--:--'}
-                  </span>
+                  {/* Time Display */}
+                  <div className="mt-3 flex items-center justify-between text-sm font-medium">
+                    <span className="text-white/60">{formatTime(elapsedTime)}</span>
+                    <span className="text-white/60">
+                      {audioRef?.current ? formatTime(audioRef.current.duration * 1000) : '--:--'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Right side - Lyrics */}
-            <div className="w-[50%] h-full flex flex-col p-12">
-              <div className="flex-1 flex items-center">
+            {/* Lyrics section with max-width */}
+            <div className="w-full xl:w-[50%] flex-1 xl:h-full flex flex-col p-6 xl:p-12">
+              <div className="flex-1 flex items-center justify-center">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={Math.floor(currentLyricIndex / 3)}
@@ -242,16 +245,16 @@ export function Slideshow({ isPlaying, onClose, audioRef }: SlideshowProps) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.5 }}
-                    className="w-full space-y-8"
+                    className="w-full max-w-lg space-y-6 xl:space-y-8"
                   >
                     {getCurrentLyricsGroup().map((lyric, index) => {
                       const absoluteIndex = Math.floor(currentLyricIndex / 3) * 3 + index
                       return (
                         <motion.div
                           key={absoluteIndex}
-                          className={`py-2 text-2xl transition-all duration-500 ${
+                          className={`py-1.5 xl:py-2 text-lg xl:text-2xl transition-all duration-500 text-center xl:text-left ${
                             absoluteIndex === currentLyricIndex
-                              ? 'text-white font-medium scale-105 translate-x-4'
+                              ? 'text-white font-medium scale-105 xl:translate-x-4'
                               : 'text-white/30'
                           }`}
                           animate={
